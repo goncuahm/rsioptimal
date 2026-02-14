@@ -231,6 +231,10 @@ st.pyplot(fig)
 st.subheader("📌 Current Portfolio Status")
 
 # Re-run full backtest to reconstruct actual position
+full_df, _, _, _ = backtest_strategy(
+    data, *best_params, risk_free_rate=RISK_FREE_RATE_ANNUAL
+)
+
 initial_cash = 10000
 cash = initial_cash
 shares = 0.0
@@ -254,8 +258,8 @@ for i in range(len(full_df)):
         shares -= shares_to_sell
         cash += proceeds
 
-# Current values
 last_price = data['Close'].iloc[-1]
+
 stock_value = shares * last_price
 total_value = cash + stock_value
 
@@ -266,7 +270,6 @@ current_rsi = full_df['RSI'].iloc[-1]
 is_bottom = full_df['Bottom'].iloc[-1]
 is_peak = full_df['Peak'].iloc[-1]
 
-# Display nicely
 col1, col2, col3 = st.columns(3)
 
 col1.metric("💰 Total Portfolio Value", f"${total_value:,.2f}")
@@ -279,63 +282,12 @@ st.markdown("---")
 st.subheader("📢 Trading Recommendation")
 
 if is_bottom and cash >= position_size:
-    st.success(f"""
-    🟢 **BUY SIGNAL**
-    
-    Suggested Action:
-    Buy approximately ${position_size:,.0f} of {TICKER}
-    
-    Reason:
-    RSI bottom pivot detected at {current_rsi:.2f}
-    """)
+    st.success(f"🟢 BUY SIGNAL for {TICKER}")
 elif is_peak and shares > 0:
-    shares_to_sell = min(position_size / last_price, shares)
-    sell_value = shares_to_sell * last_price
-
-    st.error(f"""
-    🔴 **SELL SIGNAL**
-    
-    Suggested Action:
-    Sell approximately ${sell_value:,.0f} of {TICKER}
-    
-    Reason:
-    RSI peak pivot detected at {current_rsi:.2f}
-    """)
+    st.error(f"🔴 SELL SIGNAL for {TICKER}")
 else:
-    st.info("""
-    ⚪ **HOLD**
-    
-    No confirmed RSI pivot signal.
-    Maintain current allocation.
-    """)
+    st.info("⚪ HOLD – No active signal")
 
 st.markdown("---")
 st.write("✅ Analysis complete.")
 
-
-
-# # =====================================================
-# # CURRENT SIGNAL
-# # =====================================================
-
-# full_df, _, _, _ = backtest_strategy(
-#     data, *best_params, risk_free_rate=RISK_FREE_RATE_ANNUAL
-# )
-
-# current_rsi = full_df['RSI'].iloc[-1]
-# is_bottom = full_df['Bottom'].iloc[-1]
-# is_peak = full_df['Peak'].iloc[-1]
-# last_price = data['Close'].iloc[-1]
-
-# st.subheader("Current Status")
-# st.write(f"Last Close: {last_price:.2f}")
-# st.write(f"Current RSI: {current_rsi:.2f}")
-
-# if is_bottom:
-#     st.success(f"🟢 BUY SIGNAL for {TICKER}")
-# elif is_peak:
-#     st.error(f"🔴 SELL SIGNAL for {TICKER}")
-# else:
-#     st.info("⚪ HOLD – No active signal")
-
-# st.write("Analysis complete.")
